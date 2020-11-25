@@ -4,12 +4,11 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
-import kotlinx.coroutines.CoroutineScope
+import androidx.recyclerview.widget.DiffUtil
+import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlin.system.measureTimeMillis
 
 class MainActivity : AppCompatActivity() {
 
@@ -22,17 +21,35 @@ class MainActivity : AppCompatActivity() {
         var btnSubmit = findViewById(R.id.btn_submit) as Button
         textView = findViewById(R.id.text) as TextView
         btnSubmit.setOnClickListener {
-            CoroutineScope(IO).launch {
-                getFakeresponse()
-            }
+            getFakeresponse()
+
         }
     }
 
-    private suspend fun getFakeresponse() {
-        var result1 = getResult1FromApi()
-        setTextOnMainThread(result1)
-        var result2 = getResult2FromApi(result1)
-        setTextOnMainThread(result2)
+    private fun getFakeresponse() {
+        CoroutineScope(IO).launch {
+            val executionTime = measureTimeMillis {
+                //async for parallel execution
+                //return the result
+                val result1: Deferred<String> = async {
+                    println("debug: launching job1${Thread.currentThread().name}")
+                    getResult1FromApi()
+
+                }
+
+                val result2: Deferred<String> = async {
+                    println("debug: launching job2${Thread.currentThread().name}")
+                    getResult2FromApi()
+                }
+
+                // await here waiting for the result to execute
+                setTextOnMainThread(result1.await())
+                setTextOnMainThread(result2.await())
+            }
+
+            println("debug: total time elapsed:${executionTime}")
+        }
+
     }
 
     private suspend fun getResult1FromApi(): String {
@@ -41,10 +58,10 @@ class MainActivity : AppCompatActivity() {
         return RESULT_1
     }
 
-    private suspend fun getResult2FromApi(result1: String): String {
+    private suspend fun getResult2FromApi(): String {
         logThread("getResult2FromApi")
-        delay(1000)
-        return result1 + RESULT_2
+        delay(1700)
+        return RESULT_2
     }
 
     private fun logThread(methodName: String) {
