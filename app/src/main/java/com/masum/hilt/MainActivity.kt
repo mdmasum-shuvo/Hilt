@@ -34,19 +34,16 @@ class MainActivity : AppCompatActivity() {
                 val result1: Deferred<String> = async {
                     println("debug: launching job1${Thread.currentThread().name}")
                     getResult1FromApi()
-
                 }
 
                 val result2: Deferred<String> = async {
                     println("debug: launching job2${Thread.currentThread().name}")
                     getResult2FromApi()
                 }
-
-                // await here waiting for the result to execute
+                //await here waiting for the result to execute
                 setTextOnMainThread(result1.await())
                 setTextOnMainThread(result2.await())
             }
-
             println("debug: total time elapsed:${executionTime}")
         }
 
